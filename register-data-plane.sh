@@ -16,8 +16,7 @@
 set -o nounset
 set -o errexit
 
-# TODO update the tag
-JOB_IMAGE=quay.io/domino/data-plane-upgrader:adp312-DOM-62640.data-plane-registration.a7b762c
+JOB_IMAGE=quay.io/domino/data-plane-upgrader:v4.1.19
 
 if [[ $# -ne 2 ]]; then
   echo >&2 "Usage: $0 <dps-api-endpoint> <dps-api-key>"

@@ -19,6 +19,7 @@ while [[ "$#" -gt 1 ]]; do
           KUBECTL_OPTS="$KUBECTL_OPTS --kubeconfig $2"
           shift
         ;;
+        # Add more options here as needed
         *)
           echo >&2 "Unknown argument: $1"
           exit 1
@@ -28,7 +29,7 @@ while [[ "$#" -gt 1 ]]; do
 done
 
 PAYLOAD=$1
-if [[ -z $PAYLOAD ]]; then
+if [[ -z "$PAYLOAD" ]]; then
   echo "Usage: $0 [--kubeconfig <file>] <bootstrap-payload>"
   exit 1
 fi
@@ -38,8 +39,6 @@ if [[ -z $NAMESPACE ]]; then
   echo >&2 "Cannot determine the namespace"
   exit 1
 fi
-
-echo "kubectl $KUBECTL_OPTS apply"
 
 cat <<EOF | kubectl $KUBECTL_OPTS apply -f -
 apiVersion: v1
