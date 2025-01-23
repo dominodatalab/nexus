@@ -4,16 +4,32 @@
 # Before running this script, acquire a Kubernetes context of the DATA PLANE.
 #
 # Usage:
-#         bootstrap-data-plane.sh <bootstrap-payload>
+#         bootstrap-data-plane.sh [--kubeconfig <file>] <bootstrap-payload>
 # where,
 #         bootstrap-payload -- the value of 'agent.vault.bootstrap_payload' from
 #                              a freshly generated helm install command.
 
 # This implementation will change as more Data Plane Service functionality becomes available.
 
+KUBECTL_OPTS=""
+
+while [[ "$#" -gt 1 ]]; do
+    case $1 in
+        --kubeconfig)
+          KUBECTL_OPTS="$KUBECTL_OPTS --kubeconfig $2"
+          shift
+        ;;
+        *)
+          echo >&2 "Unknown argument: $1"
+          exit 1
+        ;;
+    esac
+    shift
+done
+
 PAYLOAD=$1
 if [[ -z $PAYLOAD ]]; then
-  echo "Usage: $0 <bootstrap-payload>"
+  echo "Usage: $0 [--kubeconfig <file>] <bootstrap-payload>"
   exit 1
 fi
 
@@ -23,7 +39,9 @@ if [[ -z $NAMESPACE ]]; then
   exit 1
 fi
 
-cat <<EOF | kubectl apply -f -
+echo "kubectl $KUBECTL_OPTS apply"
+
+cat <<EOF | kubectl $KUBECTL_OPTS apply -f -
 apiVersion: v1
 data:
   payload: $PAYLOAD
