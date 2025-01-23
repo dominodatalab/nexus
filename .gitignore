@@ -1,0 +1,11 @@
+# general
+.DS_Store
+!.gitkeep
+
+# intellij
+**/.cache
+/.idea/**
+/.settings
+
+# vscode
+/.vscode
