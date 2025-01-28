@@ -34,6 +34,8 @@ if [[ -z "$PAYLOAD" ]]; then
   exit 1
 fi
 
+echo "*** PAYLOAD=>$PAYLOAD<"
+
 NAMESPACE=$(kubectl get deploy -A | grep data-plane-agent | cut -f 1 -d " ")
 if [[ -z $NAMESPACE ]]; then
   echo >&2 "Cannot determine the namespace"
