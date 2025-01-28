@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Bootstraps the data plane with initial configuration and security credentials.
 # Before running this script, acquire a Kubernetes context of the DATA PLANE.
@@ -33,6 +33,8 @@ if [[ -z "$PAYLOAD" ]]; then
   echo "Usage: $0 [--kubeconfig <file>] <bootstrap-payload>"
   exit 1
 fi
+
+echo "*** PAYLOAD=>$PAYLOAD<"
 
 NAMESPACE=$(kubectl get deploy -A | grep data-plane-agent | cut -f 1 -d " ")
 if [[ -z $NAMESPACE ]]; then
