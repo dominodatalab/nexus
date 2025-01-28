@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Bootstraps the data plane with initial configuration and security credentials.
 # Before running this script, acquire a Kubernetes context of the DATA PLANE.
