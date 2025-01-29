@@ -16,7 +16,7 @@ KUBECTL_OPTS=""
 while [[ "$#" -gt 1 ]]; do
     case $1 in
         --kubeconfig)
-          KUBECTL_OPTS="$KUBECTL_OPTS --kubeconfig $2"
+          KUBECTL_OPTS="$KUBECTL_OPTS --kubeconfig=$2"
           shift
         ;;
         # Add more options here as needed
