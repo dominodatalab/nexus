@@ -37,6 +37,8 @@ fi
 NAMESPACE=$(kubectl $KUBECTL_OPTS get deploy -A | grep data-plane-agent | cut -f 1 -d " ")
 if [[ -z $NAMESPACE ]]; then
   echo >&2 "Cannot determine the namespace"
+  echo ">kubectl $KUBECTL_OPTS get deploy -A<"
+  kubectl $KUBECTL_OPTS get deploy -A
   exit 1
 fi
 
