@@ -5,8 +5,9 @@
 # THIS SCRIPT SHOULD BE EXECUTED LOCALLY WITH A KUBE CONTEXT POINTING TO THE DATA PLANE CLUSTER.
 #
 # Usage:
-#         register-data-plane.sh <dps-api-endpoint> <dps-api-key>
+#         register-data-plane.sh [--force] <dps-api-endpoint> <dps-api-key>
 # where,
+#         --force          -- force the agent to re-bootstrap.
 #         dps-api-endpoint -- public API endpoint of the Data Plane Service, include a hostname
 #                             and an optional port;
 #                             (for development, you may use 'setup-data-plane-service-external.sh'
@@ -16,7 +17,21 @@
 set -o nounset
 set -o errexit
 
-JOB_IMAGE=quay.io/domino/data-plane-upgrader:v4.1.19
+JOB_IMAGE=quay.io/domino/data-plane-upgrader:v4.2.0 # TODO use general-purpose utility image
+FORCE=false
+
+while [[ "$#" -gt 2 ]]; do
+    case $1 in
+        --force)
+          FORCE=true
+        ;;
+        *)
+          echo >&2 "Unknown argument: $1"
+          exit 1
+        ;;
+    esac
+    shift
+done
 
 if [[ $# -ne 2 ]]; then
   echo >&2 "Usage: $0 <dps-api-endpoint> <dps-api-key>"
@@ -77,3 +92,9 @@ spec:
           type: spc_t
       serviceAccountName: data-plane-upgrader
 EOF
+
+if [[ $FORCE == true ]]; then
+  kubectl delete secret -n $NAMESPACE agent-app-role >/dev/null 2>&1 # Intentionally suppressing stderr
+  kubectl delete pod -n $NAMESPACE \
+    -l app.kubernetes.io/instance=data-plane,app.kubernetes.io/name=agent >/dev/null
+fi

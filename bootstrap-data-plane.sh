@@ -4,22 +4,23 @@
 # Before running this script, acquire a Kubernetes context of the DATA PLANE.
 #
 # Usage:
-#         bootstrap-data-plane.sh [--kubeconfig <file>] <bootstrap-payload>
+#         bootstrap-data-plane.sh [--force] <bootstrap-payload>
+#
 # where,
+#         --force           -- force the agent to re-bootstrap.
 #         bootstrap-payload -- the value of 'agent.vault.bootstrap_payload' from
 #                              a freshly generated helm install command.
 
-# This implementation will change as more Data Plane Service functionality becomes available.
+set -o nounset
+set -o errexit
 
-KUBECTL_OPTS=""
+FORCE=false
 
 while [[ "$#" -gt 1 ]]; do
     case $1 in
-        --kubeconfig)
-          KUBECTL_OPTS="$KUBECTL_OPTS --kubeconfig=$2"
-          shift
+        --force)
+          FORCE=true
         ;;
-        # Add more options here as needed
         *)
           echo >&2 "Unknown argument: $1"
           exit 1
@@ -34,17 +35,13 @@ if [[ -z "$PAYLOAD" ]]; then
   exit 1
 fi
 
-NAMESPACE=$(kubectl $KUBECTL_OPTS get deploy -A | grep data-plane-agent | cut -f 1 -d " ")
+NAMESPACE=$(kubectl get deploy -A 2>/dev/null | grep data-plane-agent | cut -f 1 -d " ")
 if [[ -z $NAMESPACE ]]; then
   echo >&2 "Cannot determine the namespace"
-  echo ">kubectl $KUBECTL_OPTS get deploy -A<"
-  kubectl $KUBECTL_OPTS get deploy -A
   exit 1
 fi
 
-echo "*** namespace=$NAMESPACE"
-
-cat <<EOF | kubectl $KUBECTL_OPTS apply -f -
+cat <<EOF | kubectl apply -f >/dev/null -
 apiVersion: v1
 data:
   payload: $PAYLOAD
@@ -54,3 +51,9 @@ metadata:
   namespace: $NAMESPACE
 type: Opaque
 EOF
+
+if [[ $FORCE == true ]]; then
+  kubectl delete secret -n $NAMESPACE agent-app-role >/dev/null 2>&1 # Intentionally suppressing stderr
+  kubectl delete pod -n $NAMESPACE \
+    -l app.kubernetes.io/instance=data-plane,app.kubernetes.io/name=agent >/dev/null
+fi
