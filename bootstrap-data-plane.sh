@@ -53,7 +53,7 @@ type: Opaque
 EOF
 
 if [[ $FORCE == true ]]; then
-  kubectl delete secret -n $NAMESPACE agent-app-role >/dev/null 2>&1 # Intentionally suppressing stderr
+  kubectl delete secret -n $NAMESPACE --ignore-not-found=true agent-app-role >/dev/null 2>&1 # Intentionally suppressing stderr
   kubectl delete pod -n $NAMESPACE \
     -l app.kubernetes.io/instance=data-plane,app.kubernetes.io/name=agent >/dev/null
 fi
