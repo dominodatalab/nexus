@@ -15,6 +15,7 @@ set -o nounset
 set -o errexit
 
 FORCE=false
+AGENT_DEPLOYMENT=data-plane-agent
 
 while [[ "$#" -gt 1 ]]; do
     case $1 in
@@ -35,10 +36,17 @@ if [[ -z "$PAYLOAD" ]]; then
   exit 1
 fi
 
-NAMESPACE=$(kubectl get deploy -A 2>/dev/null | grep data-plane-agent | cut -f 1 -d " ")
+NAMESPACE=$(kubectl get deploy -A 2>/dev/null | grep $AGENT_DEPLOYMENT | cut -f 1 -d " ")
 if [[ -z $NAMESPACE ]]; then
   echo >&2 "Cannot determine the namespace"
   exit 1
+fi
+
+if [[ $FORCE == true ]]; then
+  kubectl scale deployment -n $NAMESPACE --replicas=0 $AGENT_DEPLOYMENT >/dev/null
+  kubectl wait pod -n $NAMESPACE --for=delete --timeout=60s \
+    -l app.kubernetes.io/instance=data-plane,app.kubernetes.io/name=agent >/dev/null 2>&1 || true
+  kubectl delete secret -n $NAMESPACE --ignore-not-found=true agent-app-role >/dev/null 2>&1 || true
 fi
 
 cat <<EOF | kubectl apply -f >/dev/null -
@@ -53,7 +61,5 @@ type: Opaque
 EOF
 
 if [[ $FORCE == true ]]; then
-  kubectl delete secret -n $NAMESPACE --ignore-not-found=true agent-app-role >/dev/null 2>&1 # Intentionally suppressing stderr
-  kubectl delete pod -n $NAMESPACE \
-    -l app.kubernetes.io/instance=data-plane,app.kubernetes.io/name=agent >/dev/null
+  kubectl scale deployment -n $NAMESPACE --replicas=1 $AGENT_DEPLOYMENT >/dev/null
 fi
